@@ -1,16 +1,156 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>replit</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+  />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>AccidentPrevention AR</title>
+
+  <!-- A-Frame (MindAR removed) -->
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/master/dist/aframe-extras.min.js"></script>
+
+  <style>
+    html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+    a-scene { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
+
+    /* Live camera behind WebGL */
+    #camera-bg {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: -1;
+      background: #000;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 1000;
+      color: #fff;
+      font-size: 6vw; /* Changed from '2em' to a responsive unit */
+      background: rgba(0, 0, 0, .6);
+      pointer-events: auto;
+    }
+
+    button {
+      font-size: 3.5vw; /* Scales font size with the viewport width */
+      padding: 2.5vw 4vw; /* Scales padding with the viewport width */
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      z-index: 1001;
+    }
+
+    #clear-button, #clear-button-2, #add-sign-button {
+      position: fixed;
+      bottom: 12%; /* This already scales with the viewport height, which is good. */
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      pointer-events: auto;
+    }
+  </style>
 </head>
-
 <body>
-  Hello world
-  <script src="script.js"></script>
-</body>
 
+  <!-- Camera feed -->
+  <video id="camera-bg" autoplay muted playsinline></video>
+
+  <!-- Overlays -->
+  <div id="overlay" class="overlay" style="display:grid;place-items:center;">Tap anywhere to start</div>
+  <div id="question" class="overlay">How can you prevent this incident?<br><br>Tap to continue</div>
+  <div id="overlay2" class="overlay">Scene 2: Tap anywhere to start</div>
+  <div id="note-wetfloor" class="overlay">The floor is still wet, add a sign<br><br>Tap to continue</div>
+
+  <!-- Buttons -->
+  <button id="clear-button">Clear the Path</button>
+  <button id="clear-button-2">Clear the Path</button>
+  <button id="add-sign-button">Add Sign</button>
+
+  <a-scene
+    color-space="sRGB"
+    renderer="alpha:true; colorManagement:true; physicallyCorrectLights:true; antialias:true"
+    vr-mode-ui="enabled:false"
+    device-orientation-permission-ui="enabled:false"
+    embedded
+  >
+    <!-- Lighting -->
+    <a-light type="directional" position="1 3 2" intensity="2"></a-light>
+    <a-light type="ambient" intensity="0.8"></a-light>
+
+    <!-- Assets -->
+    <a-assets timeout="120000">
+      <a-asset-item id="WorkerTripping"    src="./assets/models/WorkerTripping.glb"></a-asset-item>
+      <a-asset-item id="WorkerSafe"        src="./assets/models/WorkerSafe.glb"></a-asset-item>
+      <a-asset-item id="WorkerWalkingSafe" src="./assets/models/WorkerWalkingSafe.glb"></a-asset-item>
+      <a-asset-item id="WorkerSlipping"    src="./assets/models/WorkerSlipping.glb"></a-asset-item>
+      <a-asset-item id="WorkerSlipping2"   src="./assets/models/WorkerSlipping2.glb"></a-asset-item>
+      <a-asset-item id="WorkerSafeSign"    src="./assets/models/WorkerSafeSign.glb"></a-asset-item>
+      <a-asset-item id="Pallet"            src="./assets/models/Pallet.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- Camera with content anchored ~1.2m in front -->
+    <a-entity id="rig" click-to-start-animation>
+      <a-camera id="cam" wasd-controls-enabled="false" look-controls="enabled:true">
+        <a-entity id="contentRoot" position="0 -0.25 -1.2">
+          <a-gltf-model id="workerTripping"    
+            src="#WorkerTripping"    
+            visible="false" 
+            scale="0.2 0.2 0.2" 
+            position="0 0 0" 
+            animation-mixer></a-gltf-model>
+          
+          <a-gltf-model id="workerSafe"        
+            src="#WorkerSafe"        
+            visible="false" scale="0.2 0.2 0.2" 
+            position="0 0 0"
+            animation-mixer></a-gltf-model>
+          
+          <a-gltf-model id="workerWalkingSafe" 
+            src="#WorkerWalkingSafe" 
+            visible="false" 
+            scale="0.2 0.2 0.2" 
+            position="0 0 0" 
+            animation-mixer></a-gltf-model>
+          
+          <a-gltf-model id="workerSlipping"    
+            src="#WorkerSlipping"    
+            visible="false" scale="0.2 0.2 0.2" 
+            position="0 0 0" 
+            animation-mixer></a-gltf-model>
+          
+          <a-gltf-model id="workerSlipping2"   
+            src="#WorkerSlipping2"   
+            visible="false" 
+            scale="0.2 0.2 0.2" 
+            position="0 0 0" 
+            animation-mixer="loop: once; clampWhenFinished: true"></a-gltf-model>
+          
+          <a-gltf-model id="workerSafeSign"    
+            src="#WorkerSafeSign"    
+            visible="false" 
+            scale="0.2 0.2 0.2" 
+            position="0 0 0" 
+            animation-mixer></a-gltf-model>
+          
+          <a-gltf-model id="palletModel"       
+            src="#Pallet"            
+            visible="false" 
+            scale="0.2 0.2 0.2" 
+            position="0 0 0"></a-gltf-model>
+        </a-entity>
+      </a-camera>
+    </a-entity>
+  </a-scene>
+
+  <script src="./script.js" defer></script>
+</body>
 </html>
