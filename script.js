@@ -244,7 +244,7 @@ AFRAME.registerComponent('click-to-start-animation', {
       // Play SafeSign
       await waitForModel(workerSafeSign);
       showEntity(workerSafeSign);
-      await playOnceFreeze(workerSafeSign, 1.0);
+      await playOnceFreeze(workerSafeSign, 0.5);
 
       setTimeout(exitApp, 2000);
     };
